@@ -1,0 +1,4 @@
+interface:
+  display_name: "Jira Access"
+  short_description: "Prefer Jira MCP with authenticated ACLI fallback"
+  default_prompt: "Use $jira-access to select and authenticate the available Jira access method."
