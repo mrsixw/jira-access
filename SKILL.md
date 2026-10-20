@@ -1,6 +1,6 @@
 ---
 name: jira-access
-description: "Select and authenticate access for Jira operations. Use whenever an agent needs to read or mutate Jira, including when another Jira-specific skill needs a common access layer: prefer the native Jira or Atlassian MCP server, fall back to ACLI, and authenticate ACLI from documented environment variables when required."
+description: "Select and authenticate access for Jira operations. Use whenever an agent needs to read or mutate Jira, including when another Jira-specific skill needs a common access layer: prefer the native Jira or Atlassian MCP server, automatically fall back to ACLI when a native operation fails, and authenticate ACLI from documented environment variables when required."
 ---
 
 # Jira Access
@@ -16,10 +16,10 @@ verification requirements.
    environment to establish the target.
 2. Prefer a configured native Jira or Atlassian MCP server that exposes the
    required operation and target.
-3. Treat MCP as unavailable for that operation only when the required tool is
-   absent, unreachable, or unsupported. An MCP authentication or permission
-   error is not unavailability: report it and stop unless the user explicitly
-   approves switching to ACLI.
+3. If a native MCP operation fails for any reason, automatically continue with
+   ACLI. This includes unavailable tools, connectivity failures, expired
+   authentication, permission errors, and unsupported operations. Do not ask
+   the user to approve this fallback or stop merely to announce it.
 4. Check `command -v acli`. If ACLI is missing, stop and report the blocker.
 5. Run `acli jira auth status` and inspect its content, not only its exit code.
 6. If the status reports an authenticated session, compare its `Site` with the
@@ -30,6 +30,8 @@ verification requirements.
    the authentication workflow below.
 8. Use the equivalent `acli jira` operation only after the target and active
    session have been verified.
+9. If ACLI cannot perform the equivalent operation, report the ACLI blocker and
+   failed action to the user. Do not silently substitute another Jira client.
 
 Never use the Atlassian Rovo connector. Do not use any unrelated Jira connector
 as a silent substitute for the native MCP server or ACLI.
@@ -95,4 +97,6 @@ variable names or the redacted authentication error and stop.
   the calling skill or user.
 - Never claim success until the requested Jira state has been read back and
   verified when a corresponding read operation is available.
+- Fall back to ACLI automatically after any native MCP execution failure. Only
+  stop when ACLI also cannot perform the requested action safely.
 - Treat stricter guardrails in a calling skill as authoritative.
