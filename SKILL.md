@@ -20,11 +20,12 @@ verification requirements.
    ACLI. This includes unavailable tools, connectivity failures, expired
    authentication, permission errors, and unsupported operations. Do not ask
    the user to approve this fallback or stop merely to announce it.
-   When the failed operation was a mutation and its outcome is uncertain, for
-   example after a timeout or a lost connection, read the Jira state back
-   first. Retry through ACLI only when the read shows that the mutation did not
-   happen. If the read cannot settle it, report the uncertainty and stop rather
-   than risk a duplicate issue, comment or transition.
+   The exception is a mutation whose outcome is uncertain, for example after a
+   timeout or a lost connection, because the original request may still
+   complete. Do not retry it through ACLI. Read the Jira state back, report
+   what the read shows together with the uncertainty, and stop. A mutation that
+   failed before it reached Jira, such as an unavailable tool, still falls back
+   automatically.
 4. Check `command -v acli`. If ACLI is missing, stop and report the blocker.
 5. Run `acli jira auth status` and inspect its content, not only its exit code.
 6. If the status reports an authenticated session, compare its `Site` with the
@@ -104,6 +105,6 @@ variable names or the redacted authentication error and stop.
   verified when a corresponding read operation is available.
 - Fall back to ACLI automatically after any native MCP execution failure. Only
   stop when ACLI also cannot perform the requested action safely.
-- Never retry a mutation through ACLI until a read-back shows that the failed
-  MCP attempt did not apply it.
+- Never retry a mutation through ACLI when the MCP attempt may have reached
+  Jira and its outcome is uncertain. Read back, report and stop instead.
 - Treat stricter guardrails in a calling skill as authoritative.
